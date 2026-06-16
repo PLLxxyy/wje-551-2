@@ -24,8 +24,14 @@ async function review(id: string, approved: boolean) { await suppliersApi.review
         <option v-for="status in Object.values(SupplierStatus)" :key="status" :value="status">{{ status }}</option>
       </select>
     </div>
-    <DataTable :columns="[{key:'name',title:'名称'},{key:'contact',title:'联系人'},{key:'phone',title:'电话'},{key:'status',title:'状态'},{key:'rating',title:'评分'},{key:'createdAt',title:'创建时间'}]" :data="store.suppliers as any">
+    <DataTable :columns="[{key:'name',title:'名称'},{key:'contact',title:'联系人'},{key:'phone',title:'电话'},{key:'status',title:'状态'},{key:'rating',title:'人工评分'},{key:'onTimeRate',title:'准时率'},{key:'createdAt',title:'创建时间'}]" :data="store.suppliers as any">
       <template #status="{ row }"><StatusBadge :value="row.status" /></template>
+      <template #rating="{ row }">{{ row.rating }}</template>
+      <template #onTimeRate="{ row }">
+        <span :class="['on-time-rate', { 'zero': row.totalDelivered === 0 }]">
+          {{ row.totalDelivered > 0 ? row.onTimeRate + '%' : '暂无数据' }}
+        </span>
+      </template>
       <template #createdAt="{ row }">{{ formatDate(row.createdAt) }}</template>
       <template #actions="{ row }">
         <RouterLink class="link" :to="`/suppliers/${row.id}`">详情</RouterLink>
@@ -38,4 +44,6 @@ async function review(id: string, approved: boolean) { await suppliersApi.review
 <style scoped>
 .link { color:#175c4a; font-weight:800; margin-right:10px; }
 .mini { border:0; background:#cddf89; border-radius:5px; padding:5px 8px; cursor:pointer; }
+.on-time-rate { color: #2f8a4f; font-weight: 600; }
+.on-time-rate.zero { color: #9aa1a0; font-weight: normal; }
 </style>

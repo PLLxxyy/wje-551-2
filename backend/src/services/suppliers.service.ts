@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { SupplierStatus } from '../constants/enums.js';
+import { ShipmentStatus, SupplierStatus } from '../constants/enums.js';
 import { PERMISSIONS } from '../constants/permissions.js';
 import { shipments, suppliers } from '../database/seeds/initial.js';
 import type { Supplier, User } from '../types/index.js';
@@ -7,18 +7,29 @@ import { auditService } from './audit.service.js';
 import { BusinessException } from '../utils/response.js';
 import { assertRequired } from '../utils/validation.js';
 
+function calculateOnTimeRate(supplierId: string) {
+  const deliveredShipments = shipments.filter(
+    (item) => item.supplierId === supplierId && item.status === ShipmentStatus.DELIVERED && item.actualArrival,
+  );
+  const total = deliveredShipments.length;
+  if (total === 0) return { onTimeRate: 0, onTimeCount: 0, totalDelivered: 0 };
+  const onTimeCount = deliveredShipments.filter((item) => new Date(item.actualArrival!) <= new Date(item.estimatedArrival)).length;
+  return { onTimeRate: Number(((onTimeCount / total) * 100).toFixed(1)), onTimeCount, totalDelivered: total };
+}
+
 export class SuppliersService {
   list(query: Record<string, string | undefined>) {
     return suppliers
       .filter((supplier) => !query.name || supplier.name.includes(query.name))
       .filter((supplier) => !query.status || supplier.status === query.status)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((supplier) => ({ ...supplier, ...calculateOnTimeRate(supplier.id) }));
   }
 
   detail(id: string) {
     const supplier = suppliers.find((item) => item.id === id);
     if (!supplier) throw new BusinessException(404, '供应商不存在');
-    return { ...supplier, shipments: shipments.filter((item) => item.supplierId === id) };
+    return { ...supplier, shipments: shipments.filter((item) => item.supplierId === id), ...calculateOnTimeRate(id) };
   }
 
   create(payload: Partial<Supplier>, user?: User) {

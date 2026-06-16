@@ -22,7 +22,17 @@ async function rate() { await suppliersApi.rating(String(route.params.id), 4.8, 
         <p>联系人：{{ store.current.contact }} / {{ store.current.phone }}</p>
         <p>邮箱：{{ store.current.email }}</p>
         <p>地址：{{ store.current.address }}</p>
-        <p>加权评分：{{ store.current.rating }}</p>
+        <div class="rating-row">
+          <div class="rating-item">
+          <span class="rating-label">人工评分</span>
+          <strong class="rating-value">{{ store.current.rating }}</strong>
+        </div>
+        <div class="rating-item">
+          <span class="rating-label">到货准时率</span>
+          <strong class="rating-value on-time">{{ store.current.onTimeRate }}%</strong>
+        </div>
+        </div>
+        <p class="on-time-detail">准时运单 {{ store.current.onTimeCount }} / {{ store.current.totalDelivered }} 单</p>
         <button class="btn secondary" @click="rate">新增评分 4.8</button>
       </div>
       <div class="panel">
@@ -31,9 +41,44 @@ async function rate() { await suppliersApi.rating(String(route.params.id), 4.8, 
       </div>
     </div>
     <h3>关联运单</h3>
-    <DataTable :columns="[{key:'orderNo',title:'运单'},{key:'status',title:'状态'},{key:'createdAt',title:'创建时间'}]" :data="(store.current as any).shipments ?? []">
+    <DataTable :columns="[{key:'orderNo',title:'运单'},{key:'status',title:'状态'},{key:'estimatedArrival',title:'预计到达'},{key:'actualArrival',title:'实际到达'},{key:'createdAt',title:'创建时间'}]" :data="(store.current as any).shipments ?? []">
       <template #status="{ row }"><StatusBadge :value="row.status" /></template>
+      <template #estimatedArrival="{ row }">{{ row.estimatedArrival ? formatDate(row.estimatedArrival) : '-' }}</template>
+      <template #actualArrival="{ row }">{{ row.actualArrival ? formatDate(row.actualArrival) : '-' }}</template>
       <template #createdAt="{ row }">{{ formatDate(row.createdAt) }}</template>
     </DataTable>
   </section>
 </template>
+
+<style scoped>
+.rating-row {
+  display: flex;
+  gap: 24px;
+  margin: 12px 0;
+  padding: 12px 0;
+  border-top: 1px solid #e8ecef;
+  border-bottom: 1px solid #e8ecef;
+}
+.rating-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rating-label {
+  font-size: 13px;
+  color: #657068;
+}
+.rating-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #17241f;
+}
+.rating-value.on-time {
+  color: #2f8a4f;
+}
+.on-time-detail {
+  font-size: 13px;
+  color: #657068;
+  margin-top: 0 0 12px;
+}
+</style>

@@ -21,20 +21,19 @@ onMounted(async () => { data.value = await dashboardApi.stats(); });
     </div>
     <div class="grid two">
       <div class="panel">
-        <h3>运单状态分布</h3>
-        <div class="bars"><p v-for="item in data.shipmentStatus" :key="item.status"><span>{{ ShipmentStatusLabel[item.status as ShipmentStatus] }}</span><b :style="{ width: `${item.count * 24 + 16}px` }">{{ item.count }}</b></p></div>
-      </div>
-      <div class="panel">
         <h3>供应商评分分布</h3>
         <div class="bars"><p v-for="item in data.ratingBuckets" :key="item.label"><span>{{ item.label }}</span><b :style="{ width: `${item.count * 32 + 16}px` }">{{ item.count }}</b></p></div>
       </div>
+      <div class="panel">
+        <h3>准时率分布</h3>
+        <div class="bars ontime"><p v-for="item in data.onTimeRateBuckets" :key="item.label"><span>{{ item.label }}</span><b :style="{ width: `${item.count * 32 + 16}px` }">{{ item.count }}</b></p></div>
+      </div>
     </div>
     <div class="grid two list-row">
-      <div>
-        <h3>最近运单</h3>
-        <DataTable :columns="[{key:'orderNo',title:'运单编号'},{key:'status',title:'状态'},{key:'createdAt',title:'创建时间'}]" :data="data.recentShipments">
-          <template #status="{ row }"><StatusBadge :value="row.status" /></template>
-          <template #createdAt="{ row }">{{ formatDate(row.createdAt) }}</template>
+      <div class="panel">
+        <h3>准时率 Top 供应商</h3>
+        <DataTable :columns="[{key:'name',title:'供应商'},{key:'onTimeRate',title:'准时率'},{key:'totalDelivered',title:'已签收'}]" :data="data.topSuppliersByOnTime">
+          <template #onTimeRate="{ row }"><span class="on-time-rate">{{ row.onTimeRate }}%</span></template>
         </DataTable>
       </div>
       <div>
@@ -43,6 +42,15 @@ onMounted(async () => { data.value = await dashboardApi.stats(); });
           <template #alertLevel="{ row }"><StatusBadge :value="row.alertLevel" /></template>
         </DataTable>
       </div>
+    </div>
+    <div class="list-row">
+      <h3>最近运单</h3>
+      <DataTable :columns="[{key:'orderNo',title:'运单编号'},{key:'status',title:'状态'},{key:'estimatedArrival',title:'预计到达'},{key:'actualArrival',title:'实际到达'},{key:'createdAt',title:'创建时间'}]" :data="data.recentShipments">
+        <template #status="{ row }"><StatusBadge :value="row.status" /></template>
+        <template #estimatedArrival="{ row }">{{ row.estimatedArrival ? formatDate(row.estimatedArrival) : '-' }}</template>
+        <template #actualArrival="{ row }">{{ row.actualArrival ? formatDate(row.actualArrival) : '-' }}</template>
+        <template #createdAt="{ row }">{{ formatDate(row.createdAt) }}</template>
+      </DataTable>
     </div>
   </section>
 </template>
@@ -55,5 +63,7 @@ article strong { display:block; font-size:34px; margin-top:8px; }
 h3 { margin:0 0 14px; }
 .bars p { display:grid; grid-template-columns:86px 1fr; align-items:center; gap:10px; margin:10px 0; }
 .bars b { display:inline-flex; min-width:34px; height:28px; align-items:center; padding-left:10px; border-radius:4px; background:#cddf89; color:#17241f; }
+.bars.ontime b { background:#9ed4a8; }
 .list-row { margin-top:18px; }
+.on-time-rate { color: #2f8a4f; font-weight: 600; }
 </style>

@@ -18,6 +18,9 @@ export interface Supplier {
   status: SupplierStatus;
   rating: number;
   ratingHistory: RatingRecord[];
+  onTimeRate: number;
+  onTimeCount: number;
+  totalDelivered: number;
   createdAt: string;
   updatedAt: string;
 }
